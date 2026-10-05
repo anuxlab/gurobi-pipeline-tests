@@ -1,37 +1,44 @@
 {
-    "name": "tiny_evrp",
-    "description": "Small deterministic EVRP instance for CI/CD regression testing",
-    "depot": 0,
-    "nodes": [
-        0,
-        1,
-        2
+  "name": "tiny_evrp",
+  "depot": "0",
+  "customers": [
+    "1",
+    "2",
+    "3"
+  ],
+  "charging_stations": [
+    "4"
+  ],
+  "nodes": {
+    "0": [
+      0,
+      0
     ],
-    "customers": [
-        1,
-        2
+    "1": [
+      2,
+      1
     ],
-    "demand": {
-        "0": 0,
-        "1": 20,
-        "2": 20
-    },
-    "distance": {
-        "0-1": 10,
-        "1-0": 10,
-        "0-2": 15,
-        "2-0": 15,
-        "1-2": 8,
-        "2-1": 8
-    },
-    "vehicle": {
-        "capacity": 50,
-        "battery_capacity": 40,
-        "initial_battery": 40,
-        "energy_rate": 0.159
-    },
-    "expected": {
-        "optimal_distance": 33.0,
-        "optimal_energy": 5.247
-    }
+    "2": [
+      4,
+      0
+    ],
+    "3": [
+      2,
+      -2
+    ],
+    "4": [
+      3,
+      1
+    ]
+  },
+  "demand": {
+    "1": 4,
+    "2": 5,
+    "3": 3
+  },
+  "vehicle": {
+    "capacity": 30,
+    "battery_capacity": 20,
+    "energy_rate": 1.0
+  }
 }

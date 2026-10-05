@@ -1,73 +1,56 @@
 {
-    "name": "TS2",
-    "description": "EVRP with two charging stations and higher customer demand",
-    "depot": 0,
-    "nodes": [
-        0,
-        1,
-        2,
-        3,
-        4,
-        5
+  "name": "TS5",
+  "depot": "0",
+  "customers": [
+    "1",
+    "2",
+    "3",
+    "4",
+    "5"
+  ],
+  "charging_stations": [
+    "6"
+  ],
+  "nodes": {
+    "0": [
+      0.0,
+      0.0
     ],
-    "customers": [
-        1,
-        2,
-        3,
-        4
+    "1": [
+      0.9,
+      0.9
     ],
-    "charging_stations": [
-        5
+    "2": [
+      1.8,
+      1.8
     ],
-    "coordinates": {
-        "0": [
-            0,
-            0
-        ],
-        "1": [
-            12,
-            4
-        ],
-        "2": [
-            25,
-            8
-        ],
-        "3": [
-            22,
-            22
-        ],
-        "4": [
-            10,
-            25
-        ],
-        "5": [
-            12,
-            14
-        ]
-    },
-    "demand": {
-        "1": 12,
-        "2": 15,
-        "3": 10,
-        "4": 8
-    },
-    "vehicle": {
-        "capacity": 60,
-        "battery_capacity": 40.0,
-        "initial_battery": 40.0,
-        "energy_rate": 0.159,
-        "speed": 100.0,
-        "charge_rate": 24.0
-    },
-    "electricity_price": {
-        "base": 0.25,
-        "peak": 0.45
-    },
-    "revenue": {
-        "fixed": 20.0
-    },
-    "metadata": {
-        "scenario": "TS2",
-        "difficulty": "easy-medium"
-    }
+    "3": [
+      2.7,
+      0.0
+    ],
+    "4": [
+      3.6,
+      0.9
+    ],
+    "5": [
+      4.5,
+      1.8
+    ],
+    "6": [
+      1.8,
+      0.9
+    ]
+  },
+  "demand": {
+    "1": 6,
+    "2": 7,
+    "3": 8,
+    "4": 5,
+    "5": 6
+  },
+  "vehicle": {
+    "capacity": 100,
+    "battery_capacity": 30,
+    "energy_rate": 1.0
+  }
 }

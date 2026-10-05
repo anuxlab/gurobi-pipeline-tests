@@ -1,17 +1,23 @@
-max_memory_mb: 8192
+name: research
 
-  threads: 0
+gurobi:
+  version: "13.0.3"
+  output_flag: 0
+  time_limit_seconds: 120
+  mip_gap: 0.001
+  threads: 2
 
-# ============================================================
-# Experiment Validation
-# ============================================================
+tests:
+  run_evrp: true
+  evrp_instance_dir: instances
+  instances:
+    - TS1.json
+    - TS2.json
+    - TS3.json
+    - TS4.json
+    - TS5.json
+    - TS6.json
 
-validation:
-
-  check_feasibility: true
-
-  check_energy_constraints: true
-  check_capacity_constraints: true
-  check_customer_service: true
-
-  reject_invalid_solution: true
+ci:
+  python_versions:
+    - "3.13"

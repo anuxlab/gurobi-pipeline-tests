@@ -1,66 +1,50 @@
 {
-    "name": "TS1",
-    "description": "Small EVRP with one charging station and moderate demand",
-    "depot": 0,
-    "nodes": [
-        0,
-        1,
-        2,
-        3,
-        4
+  "name": "TS4",
+  "depot": "0",
+  "customers": [
+    "1",
+    "2",
+    "3",
+    "4"
+  ],
+  "charging_stations": [
+    "5"
+  ],
+  "nodes": {
+    "0": [
+      0.0,
+      0.0
     ],
-    "customers": [
-        1,
-        2,
-        3
+    "1": [
+      1.0,
+      1.0
     ],
-    "charging_stations": [
-        4
+    "2": [
+      2.0,
+      2.0
     ],
-    "coordinates": {
-        "0": [
-            0,
-            0
-        ],
-        "1": [
-            10,
-            5
-        ],
-        "2": [
-            20,
-            10
-        ],
-        "3": [
-            15,
-            20
-        ],
-        "4": [
-            8,
-            15
-        ]
-    },
-    "demand": {
-        "1": 10,
-        "2": 15,
-        "3": 10
-    },
-    "vehicle": {
-        "capacity": 50,
-        "battery_capacity": 40.0,
-        "initial_battery": 40.0,
-        "energy_rate": 0.159,
-        "speed": 100.0,
-        "charge_rate": 24.0
-    },
-    "electricity_price": {
-        "base": 0.25,
-        "peak": 0.45
-    },
-    "revenue": {
-        "fixed": 20.0
-    },
-    "metadata": {
-        "scenario": "TS1",
-        "difficulty": "easy"
-    }
+    "3": [
+      3.0,
+      0.0
+    ],
+    "4": [
+      4.0,
+      1.0
+    ],
+    "5": [
+      2.0,
+      1.0
+    ]
+  },
+  "demand": {
+    "1": 6,
+    "2": 7,
+    "3": 8,
+    "4": 5
+  },
+  "vehicle": {
+    "capacity": 100,
+    "battery_capacity": 30,
+    "energy_rate": 1.0
+  }
 }

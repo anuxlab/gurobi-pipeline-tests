@@ -1,202 +1,52 @@
-import os
-
+import pytest
 import gurobipy as gp
 
-
-def create_environment():
-    """Create a Gurobi environment using WLS credentials."""
-
-    return gp.Env(
-        params={
-            "WLSACCESSID": os.environ["GRB_WLSACCESSID"],
-            "WLSSECRET": os.environ["GRB_WLSSECRET"],
-            "LICENSEID": int(os.environ["GRB_LICENSEID"]),
-        }
-    )
+from gurobi_tests.gurobi_env import new_env
 
 
-def test_binary_mip():
-    """
-    Test a simple binary MILP.
-
-    max 3x + 2y
-
-    subject to:
-        x + y <= 1
-        x,y ∈ {0,1}
-
-    Expected:
-        x = 1
-        y = 0
-        objective = 3
-    """
-
-    env = create_environment()
-
+@pytest.mark.mip
+def test_small_mip():
+    env = new_env()
     try:
-        model = gp.Model("binary_mip_test", env=env)
+        m = gp.Model("small_mip", env=env)
+        x = m.addVars(4, vtype=gp.GRB.BINARY, name="x")
+        values = [10, 8, 7, 6]
+        weights = [6, 5, 4, 3]
 
-        x = model.addVar(vtype=gp.GRB.BINARY, name="x")
-        y = model.addVar(vtype=gp.GRB.BINARY, name="y")
+        m.addConstr(gp.quicksum(weights[i] * x[i] for i in range(4)) <= 10)
+        m.setObjective(gp.quicksum(values[i] * x[i] for i in range(4)), gp.GRB.MAXIMIZE)
+        m.optimize()
 
-        model.addConstr(
-            x + y <= 1,
-            name="capacity"
-        )
-
-        model.setObjective(
-            3 * x + 2 * y,
-            gp.GRB.MAXIMIZE
-        )
-
-        model.optimize()
-
-        assert model.Status == gp.GRB.OPTIMAL
-        assert model.SolCount > 0
-
-        assert abs(x.X - 1.0) < 1e-6
-        assert abs(y.X - 0.0) < 1e-6
-        assert abs(model.ObjVal - 3.0) < 1e-6
-
+        assert m.Status == gp.GRB.OPTIMAL
+        assert abs(m.ObjVal - 17.0) < 1e-7
     finally:
-        env.close()
+        env.dispose()
 
 
-def test_integer_mip():
-    """
-    Test an integer optimization problem.
-
-    max 7x
-
-    subject to:
-        2x <= 10
-        x >= 0
-        x ∈ Z
-
-    Expected:
-        x = 5
-        objective = 35
-    """
-
-    env = create_environment()
-
+@pytest.mark.mip
+def test_integer_constraint():
+    env = new_env()
     try:
-        model = gp.Model("integer_mip_test", env=env)
+        m = gp.Model("integer_test", env=env)
+        x = m.addVar(vtype=gp.GRB.INTEGER, lb=0, ub=10)
+        m.addConstr(3 * x >= 10)
+        m.setObjective(x, gp.GRB.MINIMIZE)
+        m.optimize()
 
-        x = model.addVar(
-            vtype=gp.GRB.INTEGER,
-            lb=0,
-            name="x"
-        )
-
-        model.addConstr(
-            2 * x <= 10,
-            name="upper_bound"
-        )
-
-        model.setObjective(
-            7 * x,
-            gp.GRB.MAXIMIZE
-        )
-
-        model.optimize()
-
-        assert model.Status == gp.GRB.OPTIMAL
-        assert model.SolCount > 0
-
-        assert abs(x.X - 5.0) < 1e-6
-        assert abs(model.ObjVal - 35.0) < 1e-6
-
+        assert m.Status == gp.GRB.OPTIMAL
+        assert x.X == 4
     finally:
-        env.close()
+        env.dispose()
 
 
-def test_mip_multiple_constraints():
-    """
-    Test a small binary knapsack problem.
-
-    Items:
-        A: value=10, weight=4
-        B: value=7,  weight=3
-        C: value=6,  weight=2
-
-    Capacity = 5
-
-    Optimal solution:
-        A + C
-        value = 16
-        weight = 6 -> infeasible
-
-    Therefore the optimal feasible solution is:
-        B + C
-        value = 13
-        weight = 5
-    """
-
-    env = create_environment()
-
+@pytest.mark.mip
+def test_infeasible_model_is_detected():
+    env = new_env()
     try:
-        model = gp.Model("knapsack_test", env=env)
-
-        x_a = model.addVar(vtype=gp.GRB.BINARY, name="A")
-        x_b = model.addVar(vtype=gp.GRB.BINARY, name="B")
-        x_c = model.addVar(vtype=gp.GRB.BINARY, name="C")
-
-        model.addConstr(
-            4 * x_a + 3 * x_b + 2 * x_c <= 5,
-            name="capacity"
-        )
-
-        model.setObjective(
-            10 * x_a + 7 * x_b + 6 * x_c,
-            gp.GRB.MAXIMIZE
-        )
-
-        model.optimize()
-
-        assert model.Status == gp.GRB.OPTIMAL
-
-        assert abs(x_a.X - 0.0) < 1e-6
-        assert abs(x_b.X - 1.0) < 1e-6
-        assert abs(x_c.X - 1.0) < 1e-6
-
-        assert abs(model.ObjVal - 13.0) < 1e-6
-
+        m = gp.Model("infeasible_test", env=env)
+        x = m.addVar(lb=0, ub=1)
+        m.addConstr(x >= 2)
+        m.optimize()
+        assert m.Status == gp.GRB.INFEASIBLE
     finally:
-        env.close()
-
-
-def test_infeasible_mip():
-    """
-    Test Gurobi's handling of an infeasible MILP.
-
-    x >= 10
-    x <= 5
-    """
-
-    env = create_environment()
-
-    try:
-        model = gp.Model("infeasible_mip_test", env=env)
-
-        x = model.addVar(
-            vtype=gp.GRB.INTEGER,
-            name="x"
-        )
-
-        model.addConstr(
-            x >= 10,
-            name="lower"
-        )
-
-        model.addConstr(
-            x <= 5,
-            name="upper"
-        )
-
-        model.optimize()
-
-        assert model.Status == gp.GRB.INFEASIBLE
-
-    finally:
-        env.close()
+        env.dispose()

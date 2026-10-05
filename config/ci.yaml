@@ -1,7 +1,0 @@
-gurobi:
-  parameters:
-    TimeLimit: 30
-    MIPGap: 0.01
-
-experiments:
-  enabled: false
