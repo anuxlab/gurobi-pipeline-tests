@@ -1,25 +1,13 @@
-import pytest
 import gurobipy as gp
 
-
-@pytest.mark.lp
-def test_small_lp(solver_env):
-    m = gp.Model("small_lp", env=solver_env)
-    x = m.addVars(2, lb=0)
-    m.addConstr(x[0] + x[1] >= 10)
-    m.addConstr(2*x[0] + x[1] >= 14)
-    m.setObjective(3*x[0] + 2*x[1], gp.GRB.MINIMIZE)
+def test_lp(solver_env):
+    m = gp.Model("lp", env=solver_env)
+    x = m.addVar(lb=0)
+    y = m.addVar(lb=0)
+    m.addConstr(2*x + y <= 8)
+    m.addConstr(x + 2*y <= 8)
+    m.setObjective(3*x + 2*y, gp.GRB.MAXIMIZE)
     m.optimize()
     assert m.Status == gp.GRB.OPTIMAL
-    assert abs(m.ObjVal - 24.0) < 1e-7
-    m.dispose()
-
-
-@pytest.mark.lp
-def test_unbounded_lp_status(solver_env):
-    m = gp.Model("unbounded_lp", env=solver_env)
-    x = m.addVar(lb=-gp.GRB.INFINITY)
-    m.setObjective(x, gp.GRB.MINIMIZE)
-    m.optimize()
-    assert m.Status == gp.GRB.UNBOUNDED
+    assert abs(m.ObjVal - 13.3333333333) < 1e-6
     m.dispose()

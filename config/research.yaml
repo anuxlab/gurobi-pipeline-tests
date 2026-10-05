@@ -1,22 +1,15 @@
-name: research
-
 gurobi:
   version: "13.0.3"
-  output_flag: 0
-  time_limit_seconds: 120
+  output_flag: false
+  time_limit: 60
   mip_gap: 0.001
-  threads: 2
-
 tests:
-  evrp_instance_dir: instances
+  suites: [smoke, lp, mip, qp, advanced, evrp]
   instances:
+    - tiny_evrp.json
     - TS1.json
     - TS2.json
     - TS3.json
     - TS4.json
     - TS5.json
     - TS6.json
-  expected_evrp_status: OPTIMAL
-
-ci:
-  max_parallel: 2

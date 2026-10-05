@@ -1,16 +1,5 @@
-name: development
-
 gurobi:
   version: "13.0.3"
-  output_flag: 0
-  time_limit_seconds: 30
-  mip_gap: 0.0
-  threads: 1
-
+  output_flag: false
 tests:
-  evrp_instance_dir: instances
-  default_instance: tiny_evrp.json
-  expected_evrp_status: OPTIMAL
-
-ci:
-  max_parallel: 1
+  suites: [smoke, lp, mip, qp, advanced]

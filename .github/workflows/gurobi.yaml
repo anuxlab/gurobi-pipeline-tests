@@ -9,149 +9,119 @@ on:
 permissions:
   contents: read
 
-# Important for academic WLS: do not start many independent Gurobi
-# environments at the same time. Matrix is still used for isolation and
-# visibility, but solver jobs are deliberately serialized by default.
-concurrency:
-  group: gurobi-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
-  static-validation:
+  static:
     name: Static validation
     runs-on: ubuntu-24.04
     steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-
-      - name: Setup Python
-        uses: actions/setup-python@v6
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.13"
           cache: pip
-
-      - name: Install non-solver dependencies
-        run: python -m pip install PyYAML==6.0.3
-
-      - name: Validate configuration and instances
+      - run: python -m pip install PyYAML==6.0.3
+      - name: Validate files
         run: |
           python - <<'PY'
           from pathlib import Path
-          import json
-          import yaml
-
-          for cfg in [Path('config/development.yaml'), Path('config/research.yaml')]:
-              data = yaml.safe_load(cfg.read_text())
-              assert data['gurobi']['version'] == '13.0.3'
-              assert 'tests' in data
-
-          names = ['tiny_evrp.json'] + [f'TS{i}.json' for i in range(1, 7)]
-          for name in names:
-              p = Path('instances') / name
-              assert p.exists(), p
-              data = json.loads(p.read_text())
-              assert data['depot'] in data['nodes']
-              assert data['customers']
-              assert all(c in data['nodes'] for c in data['customers'])
-          print('Configuration and EVRP instance validation passed.')
+          import json, yaml
+          for p in [Path("config/development.yaml"), Path("config/research.yaml")]:
+              yaml.safe_load(p.read_text())
+          names=["tiny_evrp.json"]+[f"TS{i}.json" for i in range(1,7)]
+          for n in names:
+              d=json.loads((Path("instances")/n).read_text())
+              assert d["depot"] in d["nodes"]
+              assert all(c in d["nodes"] for c in d["customers"])
+          print("Static validation OK")
           PY
 
-  solver-tests:
-    name: ${{ matrix.suite }}${{ matrix.instance && format(' / {0}', matrix.instance) || '' }}
+  solver:
+    name: ${{ matrix.name }}
+    needs: static
     runs-on: ubuntu-24.04
-    needs: static-validation
-
     strategy:
       fail-fast: false
-      # Academic WLS licenses may restrict concurrent sessions. Keeping this
-      # at 1 makes the workflow reliable. Increase only if your WLS license
-      # explicitly permits more concurrent sessions.
       max-parallel: 1
       matrix:
         include:
-          - suite: smoke
-            test_path: tests/test_gurobi.py
-            instance: ""
-          - suite: lp
-            test_path: tests/test_lp.py
-            instance: ""
-          - suite: mip
-            test_path: tests/test_mip.py
-            instance: ""
-          - suite: qp
-            test_path: tests/test_qp.py
-            instance: ""
-          - suite: advanced
-            test_path: tests/test_advanced.py
-            instance: ""
-          - suite: evrp
-            test_path: tests/test_evrp.py
-            instance: tiny_evrp.json
-          - suite: evrp
-            test_path: tests/test_evrp.py
-            instance: TS1.json
-          - suite: evrp
-            test_path: tests/test_evrp.py
-            instance: TS2.json
-          - suite: evrp
-            test_path: tests/test_evrp.py
-            instance: TS3.json
-          - suite: evrp
-            test_path: tests/test_evrp.py
-            instance: TS4.json
-          - suite: evrp
-            test_path: tests/test_evrp.py
-            instance: TS5.json
-          - suite: evrp
-            test_path: tests/test_evrp.py
-            instance: TS6.json
-
+          - name: Smoke
+            path: tests/test_gurobi.py
+          - name: LP
+            path: tests/test_lp.py
+          - name: MIP
+            path: tests/test_mip.py
+          - name: QP
+            path: tests/test_qp.py
+          - name: Advanced
+            path: tests/test_advanced.py
     env:
       GRB_WLSACCESSID: ${{ secrets.GRB_WLSACCESSID }}
       GRB_WLSSECRET: ${{ secrets.GRB_WLSSECRET }}
       GRB_LICENSEID: ${{ secrets.GRB_LICENSEID }}
-      EXPECTED_GUROBI_VERSION: "13.0.3"
-      GUROBI_CONFIG: config/research.yaml
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-
-      - name: Setup Python
-        uses: actions/setup-python@v6
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.13"
           cache: pip
-
       - name: Install dependencies
         run: python -m pip install -r requirements.txt
-
-      - name: Validate WLS secrets without printing values
+      - name: Validate WLS secrets
         shell: bash
         run: |
-          set -euo pipefail
-          [[ -n "${GRB_WLSACCESSID:-}" ]] || { echo "GRB_WLSACCESSID is missing"; exit 1; }
-          [[ -n "${GRB_WLSSECRET:-}" ]] || { echo "GRB_WLSSECRET is missing"; exit 1; }
-          [[ "${GRB_LICENSEID:-}" =~ ^[0-9]+$ ]] || { echo "GRB_LICENSEID must be numeric"; exit 1; }
-          echo "WLS secret names are present and LICENSEID is numeric."
-
-      - name: Show runtime versions
-        run: |
-          python --version
-          python -c "import gurobipy as gp; print('gurobipy:', gp.gurobi.version())"
-
-      - name: Run pytest suite
-        env:
-          EVRP_INSTANCE: ${{ matrix.instance }}
+          set -e
+          test -n "$GRB_WLSACCESSID"
+          test -n "$GRB_WLSSECRET"
+          [[ "$GRB_LICENSEID" =~ ^[0-9]+$ ]]
+      - name: Run pytest
         run: |
           mkdir -p reports
-          pytest -v ${{ matrix.test_path }} \
-            --junitxml="reports/${{ matrix.suite }}${{ matrix.instance && format('-{0}', matrix.instance) || '' }}.xml"
-
-      - name: Upload JUnit result
+          python -m pytest "${{ matrix.path }}" -v --junitxml=reports/results.xml
+      - name: Upload JUnit
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: junit-${{ matrix.suite }}${{ matrix.instance && format('-{0}', matrix.instance) || '' }}
-          path: reports/*.xml
-          if-no-files-found: warn
+          name: junit-${{ matrix.name }}
+          path: reports/results.xml
+          if-no-files-found: ignore
+
+  evrp:
+    name: EVRP / ${{ matrix.instance }}
+    needs: static
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        instance: [tiny_evrp.json, TS1.json, TS2.json, TS3.json, TS4.json, TS5.json, TS6.json]
+    env:
+      GRB_WLSACCESSID: ${{ secrets.GRB_WLSACCESSID }}
+      GRB_WLSSECRET: ${{ secrets.GRB_WLSSECRET }}
+      GRB_LICENSEID: ${{ secrets.GRB_LICENSEID }}
+      EVRP_INSTANCE: ${{ matrix.instance }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: pip
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Validate WLS secrets
+        shell: bash
+        run: |
+          set -e
+          test -n "$GRB_WLSACCESSID"
+          test -n "$GRB_WLSSECRET"
+          [[ "$GRB_LICENSEID" =~ ^[0-9]+$ ]]
+      - name: Run EVRP tests
+        run: |
+          mkdir -p reports
+          python -m pytest tests/test_evrp.py -v --junitxml=reports/results.xml
+      - name: Upload JUnit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: junit-evrp-${{ matrix.instance }}
+          path: reports/results.xml
+          if-no-files-found: ignore

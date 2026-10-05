@@ -1,9 +1,0 @@
-__pycache__/
-.pytest_cache/
-*.pyc
-reports/*.xml
-reports/*.json
-.env
-.venv/
-gurobi.lic
-.DS_Store
