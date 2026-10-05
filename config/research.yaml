@@ -1,0 +1,17 @@
+max_memory_mb: 8192
+
+  threads: 0
+
+# ============================================================
+# Experiment Validation
+# ============================================================
+
+validation:
+
+  check_feasibility: true
+
+  check_energy_constraints: true
+  check_capacity_constraints: true
+  check_customer_service: true
+
+  reject_invalid_solution: true

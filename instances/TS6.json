@@ -1,0 +1,120 @@
+{
+    "name": "TS6",
+    "description": "Large EVRP stress instance with tight energy and capacity conditions",
+    "depot": 0,
+    "nodes": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+    ],
+    "customers": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+    ],
+    "charging_stations": [
+        10,
+        11,
+        12
+    ],
+    "coordinates": {
+        "0": [
+            0,
+            0
+        ],
+        "1": [
+            8,
+            3
+        ],
+        "2": [
+            20,
+            2
+        ],
+        "3": [
+            35,
+            5
+        ],
+        "4": [
+            48,
+            15
+        ],
+        "5": [
+            52,
+            30
+        ],
+        "6": [
+            42,
+            42
+        ],
+        "7": [
+            28,
+            48
+        ],
+        "8": [
+            14,
+            42
+        ],
+        "9": [
+            4,
+            28
+        ],
+        "10": [
+            16,
+            15
+        ],
+        "11": [
+            32,
+            25
+        ],
+        "12": [
+            38,
+            38
+        ]
+    },
+    "demand": {
+        "1": 10,
+        "2": 12,
+        "3": 15,
+        "4": 10,
+        "5": 12,
+        "6": 8,
+        "7": 15,
+        "8": 10,
+        "9": 8
+    },
+    "vehicle": {
+        "capacity": 90,
+        "battery_capacity": 40.0,
+        "initial_battery": 40.0,
+        "energy_rate": 0.159,
+        "speed": 100.0,
+        "charge_rate": 24.0
+    },
+    "electricity_price": {
+        "base": 0.25,
+        "peak": 0.45
+    },
+    "revenue": {
+        "fixed": 20.0
+    },
+    "metadata": {
+        "scenario": "TS6",
+        "difficulty": "stress"
+    }
+}

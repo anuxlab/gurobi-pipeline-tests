@@ -1,0 +1,93 @@
+{
+    "name": "TS4",
+    "description": "Medium EVRP with capacity and energy trade-offs",
+    "depot": 0,
+    "nodes": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+    ],
+    "customers": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+    ],
+    "charging_stations": [
+        7,
+        8
+    ],
+    "coordinates": {
+        "0": [
+            0,
+            0
+        ],
+        "1": [
+            8,
+            5
+        ],
+        "2": [
+            20,
+            4
+        ],
+        "3": [
+            35,
+            8
+        ],
+        "4": [
+            38,
+            22
+        ],
+        "5": [
+            25,
+            32
+        ],
+        "6": [
+            10,
+            28
+        ],
+        "7": [
+            15,
+            12
+        ],
+        "8": [
+            30,
+            20
+        ]
+    },
+    "demand": {
+        "1": 10,
+        "2": 12,
+        "3": 15,
+        "4": 8,
+        "5": 12,
+        "6": 10
+    },
+    "vehicle": {
+        "capacity": 75,
+        "battery_capacity": 40.0,
+        "initial_battery": 40.0,
+        "energy_rate": 0.159,
+        "speed": 100.0,
+        "charge_rate": 24.0
+    },
+    "electricity_price": {
+        "base": 0.25,
+        "peak": 0.45
+    },
+    "revenue": {
+        "fixed": 20.0
+    },
+    "metadata": {
+        "scenario": "TS4",
+        "difficulty": "medium-hard"
+    }
+}

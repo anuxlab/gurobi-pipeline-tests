@@ -1,0 +1,86 @@
+# ============================================================
+# Development Configuration
+# ============================================================
+
+environment:
+  name: development
+  debug: true
+
+# ============================================================
+# Gurobi
+# ============================================================
+
+gurobi:
+  license:
+    type: wls
+
+  parameters:
+    OutputFlag: 1
+    LogToConsole: 1
+
+    # Faster feedback during development
+    TimeLimit: 60
+
+    # Development tolerance
+    MIPGap: 0.01
+
+    # Reproducibility
+    Seed: 42
+
+# ============================================================
+# Testing
+# ============================================================
+
+tests:
+  run_license: true
+  run_version: true
+  run_lp: true
+  run_binary_mip: true
+  run_integer_mip: true
+  run_infeasible: true
+  run_time_limit: false
+  run_evrp: true
+
+  fail_fast: true
+
+# ============================================================
+# EVRP
+# ============================================================
+
+evrp:
+  default_instance: tiny_evrp.json
+
+  vehicle:
+    capacity: 100
+    battery_capacity: 40.0
+    initial_battery: 40.0
+    energy_rate: 0.159
+    speed: 100.0
+    charge_rate: 24.0
+
+  charging:
+    enabled: true
+
+  pricing:
+    fixed_revenue: 20.0
+    base_price: 0.25
+    peak_price: 0.45
+
+# ============================================================
+# Research Experiments
+# ============================================================
+
+experiments:
+  enabled: false
+
+  repetitions: 1
+
+# ============================================================
+# Development Output
+# ============================================================
+
+output:
+  save_models: true
+  save_logs: true
+  save_results: true
+  save_plots: false

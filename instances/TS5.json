@@ -1,0 +1,107 @@
+{
+    "name": "TS5",
+    "description": "Large EVRP stressing charging and route selection",
+    "depot": 0,
+    "nodes": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+    ],
+    "customers": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+    ],
+    "charging_stations": [
+        9,
+        10
+    ],
+    "coordinates": {
+        "0": [
+            0,
+            0
+        ],
+        "1": [
+            8,
+            4
+        ],
+        "2": [
+            20,
+            3
+        ],
+        "3": [
+            35,
+            7
+        ],
+        "4": [
+            45,
+            18
+        ],
+        "5": [
+            42,
+            32
+        ],
+        "6": [
+            30,
+            40
+        ],
+        "7": [
+            15,
+            38
+        ],
+        "8": [
+            5,
+            25
+        ],
+        "9": [
+            18,
+            15
+        ],
+        "10": [
+            35,
+            25
+        ]
+    },
+    "demand": {
+        "1": 8,
+        "2": 10,
+        "3": 12,
+        "4": 15,
+        "5": 10,
+        "6": 12,
+        "7": 8,
+        "8": 10
+    },
+    "vehicle": {
+        "capacity": 85,
+        "battery_capacity": 40.0,
+        "initial_battery": 40.0,
+        "energy_rate": 0.159,
+        "speed": 100.0,
+        "charge_rate": 24.0
+    },
+    "electricity_price": {
+        "base": 0.25,
+        "peak": 0.45
+    },
+    "revenue": {
+        "fixed": 20.0
+    },
+    "metadata": {
+        "scenario": "TS5",
+        "difficulty": "hard"
+    }
+}
