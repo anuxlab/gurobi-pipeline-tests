@@ -1,6 +1,9 @@
 __pycache__/
 .pytest_cache/
-.venv/
 *.pyc
-gurobi.lic
+reports/*.xml
+reports/*.json
 .env
+.venv/
+gurobi.lic
+.DS_Store

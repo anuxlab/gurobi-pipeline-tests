@@ -8,7 +8,6 @@ gurobi:
   threads: 2
 
 tests:
-  run_evrp: true
   evrp_instance_dir: instances
   instances:
     - TS1.json
@@ -17,7 +16,7 @@ tests:
     - TS4.json
     - TS5.json
     - TS6.json
+  expected_evrp_status: OPTIMAL
 
 ci:
-  python_versions:
-    - "3.13"
+  max_parallel: 2

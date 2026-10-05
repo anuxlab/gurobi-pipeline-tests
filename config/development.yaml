@@ -5,12 +5,12 @@ gurobi:
   output_flag: 0
   time_limit_seconds: 30
   mip_gap: 0.0
+  threads: 1
 
 tests:
-  run_evrp: true
   evrp_instance_dir: instances
   default_instance: tiny_evrp.json
+  expected_evrp_status: OPTIMAL
 
 ci:
-  python_versions:
-    - "3.13"
+  max_parallel: 1
