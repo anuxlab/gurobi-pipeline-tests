@@ -1,0 +1,29 @@
+name: Gurobi CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  gurobi-test:
+    runs-on: ubuntu-latest
+
+    env:
+      GRB_WLSACCESSID: ${{ secrets.GRB_WLSACCESSID }}
+      GRB_WLSSECRET: ${{ secrets.GRB_WLSSECRET }}
+      GRB_LICENSEID: ${{ secrets.GRB_LICENSEID }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Test Gurobi WLS
+        run: pytest -v
