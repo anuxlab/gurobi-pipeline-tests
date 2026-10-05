@@ -1,15 +1,23 @@
+environment: research
+
 gurobi:
   version: "13.0.3"
-  output_flag: false
-  time_limit: 60
+  output_flag: 1
+  time_limit_seconds: 3600
   mip_gap: 0.001
-tests:
-  suites: [smoke, lp, mip, qp, advanced, evrp]
+  threads: 2
+
+experiments:
   instances:
-    - tiny_evrp.json
     - TS1.json
     - TS2.json
     - TS3.json
     - TS4.json
     - TS5.json
     - TS6.json
+  algorithms:
+    - LLP
+    - NIP
+    - BPC
+    - ALNS
+  repetitions: 10

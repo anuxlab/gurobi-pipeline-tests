@@ -7,35 +7,58 @@
     "3",
     "4"
   ],
+  "charging_stations": [
+    "5"
+  ],
   "nodes": {
     "0": {
-      "x": 0,
-      "y": 0,
-      "reward": 0
+      "x": 0.0,
+      "y": 0.0,
+      "reward": 0.0
     },
     "1": {
-      "x": 2,
-      "y": 2,
+      "x": 1.0,
+      "y": 1.0,
       "reward": 6.0
     },
     "2": {
-      "x": 4,
-      "y": 4,
+      "x": 2.0,
+      "y": 2.0,
       "reward": 7.0
     },
     "3": {
-      "x": 6,
-      "y": 0,
+      "x": 3.0,
+      "y": 0.0,
       "reward": 8.0
     },
     "4": {
-      "x": 8,
-      "y": 2,
+      "x": 4.0,
+      "y": 1.0,
       "reward": 9.0
+    },
+    "5": {
+      "x": 2.5,
+      "y": 1.0,
+      "reward": 0.0
     }
   },
+  "demand": {
+    "1": 4.0,
+    "2": 5.0,
+    "3": 6.0,
+    "4": 3.0
+  },
   "vehicle": {
-    "capacity": 100,
-    "battery_capacity": 100
+    "capacity": 1000.0,
+    "battery_capacity": 1000.0,
+    "initial_battery": 1000.0,
+    "energy_rate": 0.159,
+    "speed": 100.0,
+    "charge_rate": 24.0
+  },
+  "metadata": {
+    "synthetic": true,
+    "purpose": "CI regression test",
+    "difficulty": "TS1"
   }
 }

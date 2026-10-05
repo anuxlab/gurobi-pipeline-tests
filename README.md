@@ -1,190 +1,97 @@
-# Gurobi Pipeline Tests v2
+# Gurobi Pipeline Tests v3
 
-A small, deterministic Gurobi regression suite for local development and GitHub Actions CI/CD using an Academic WLS license.
+This version is intentionally designed around **Academic WLS session behavior**.
 
-## What v2 fixes
+## Why v3 uses one solver job
 
-The first version had two important reliability problems:
+An Academic WLS license has a baseline of two concurrent Gurobi sessions. A WLS token remains counted until the environment is closed and the token lifespan has expired. Therefore, a GitHub Actions job matrix can unexpectedly accumulate sessions even when each matrix has `max-parallel: 1`.
 
-1. The EVRP battery/depot formulation could make otherwise valid routes infeasible because the depot's start-energy state was reused for the return arc.
-2. The GitHub matrix could launch many WLS sessions simultaneously. Academic WLS licenses can have a concurrent-session baseline, so an aggressive matrix can fail even when the credentials are correct.
+v3 uses:
+- one static validation job (no Gurobi)
+- one solver job
+- one session-scoped `gurobipy.Env`
+- one pytest process
+- pytest parameterization as the test matrix
+- workflow-level concurrency to prevent overlapping runs
 
-v2 therefore:
+This is more reliable for an academic WLS license.
 
-- separates static validation from solver tests;
-- uses a matrix for clear per-suite/per-instance jobs;
-- serializes Gurobi jobs with `max-parallel: 1` by default;
-- creates and disposes one Gurobi environment per test;
-- validates WLS secrets before running models;
-- uploads JUnit XML results even when a test fails;
-- uses deterministic LP/MIP/QP/advanced regression cases;
-- validates all six research EVRP instances before solving;
-- keeps WLS credentials exclusively in GitHub Actions Secrets.
+## Test coverage
 
-Gurobi's current WLS guidance supports providing `WLSACCESSID`, `WLSSECRET`, and numeric `LICENSEID` through the Python API or a `gurobi.lic` file. WLS requires the client to communicate with Gurobi's servers over the internet. citeturn0search1turn0search4
+### Smoke
+- Gurobi version
+- WLS environment starts
+- tiny optimization
 
-## Repository
+### LP
+- optimal LP
+- unbounded LP
 
-```text
-.
-├── .github/workflows/gurobi.yaml
-├── config/
-│   ├── development.yaml
-│   └── research.yaml
-├── gurobi_tests/
-│   ├── config.py
-│   ├── evrp_model.py
-│   └── gurobi_env.py
-├── instances/
-│   ├── tiny_evrp.json
-│   ├── TS1.json
-│   ├── TS2.json
-│   ├── TS3.json
-│   ├── TS4.json
-│   ├── TS5.json
-│   └── TS6.json
-├── tests/
-│   ├── conftest.py
-│   ├── test_advanced.py
-│   ├── test_evrp.py
-│   ├── test_gurobi.py
-│   ├── test_lp.py
-│   ├── test_mip.py
-│   └── test_qp.py
-├── pytest.ini
-└── requirements.txt
-```
+### MIP
+- binary knapsack
+- integer model
+- assignment model
+- infeasible model
 
-## GitHub Secrets
+### QP
+- convex QP
+- quadratic objective with equality constraint
 
-Create these repository secrets:
+### Advanced
+- parameter/count verification
+- indicator constraint
+- solution pool
+- IIS computation
+- LP write/read round trip
 
-```text
-GRB_WLSACCESSID
-GRB_WLSSECRET
-GRB_LICENSEID
-```
+### EVRP
+- JSON schema validation
+- tiny + TS1-TS6 routing MILP smoke/regression
+- capacity constraints
+- MTZ subtour elimination
+- simple route energy budget
 
-Do not commit `gurobi.lic`, WLS secrets, or API keys. Gurobi explicitly treats the WLS secret as private credential material. citeturn0search1
+The EVRP files are synthetic CI test instances, not the original benchmark instances from a paper.
 
-## Local run
+## Validation
 
-Set the same environment variables in your shell:
+The package can be statically checked without a Gurobi license, but actual solver/WLS tests must be run on a machine/CI runner with valid Gurobi access.
+
+## Local use
+
+With a downloaded WLS `gurobi.lic` in `~/gurobi.lic`:
 
 ```bash
-export GRB_WLSACCESSID='...'
-export GRB_WLSSECRET='...'
-export GRB_LICENSEID='2871490'
-
-python3 -m pip install -r requirements.txt
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
 pytest -v
 ```
 
-For one EVRP instance:
+Alternatively, use WLS environment variables:
 
 ```bash
-export EVRP_INSTANCE=TS1.json
-pytest -v tests/test_evrp.py
+export GRB_WLSACCESSID="..."
+export GRB_WLSSECRET="..."
+export GRB_LICENSEID="2871490"
+pytest -v
 ```
 
-For the research configuration:
+Never commit credentials or `gurobi.lic`.
 
-```bash
-export GUROBI_CONFIG=config/research.yaml
-```
+## GitHub Secrets
 
-The tests use a context-managed/lifecycle-safe Gurobi environment pattern and explicitly dispose the environment after each test. This matters for WLS because an active environment holds a WLS token until the environment is closed and the token lifetime expires. citeturn0search9
+Set:
+- `GRB_WLSACCESSID`
+- `GRB_WLSSECRET`
+- `GRB_LICENSEID`
 
-## GitHub Actions matrix
+## CI matrix
 
-The solver job is a matrix with these entries:
+The test matrix is implemented by pytest parameterization so that all cases share one long-lived WLS environment.
 
-```text
-smoke
-lp
-mip
-qp
-advanced
-evrp / tiny_evrp.json
-evrp / TS1.json
-...
-evrp / TS6.json
-```
+This intentionally avoids an Actions job matrix for solver calls. It is still a matrix of independent test cases, but it does not create multiple cloud machines/sessions.
 
-GitHub Actions creates a separate job for every matrix combination. citeturn0search5
+## Research usage
 
-The matrix is deliberately set to:
-
-```yaml
-max-parallel: 1
-```
-
-for Academic WLS reliability. If your WLS license permits multiple concurrent sessions, this can be raised, for example to `2` or `4`.
-
-## Test layers
-
-### Smoke
-
-- Python/gurobipy version
-- WLS credential format
-- actual WLS environment startup
-- one optimization
-
-### LP
-
-- optimal LP
-- unbounded LP status
-
-### MIP
-
-- binary knapsack
-- assignment model
-- integer variable model
-- infeasible model detection
-
-### QP
-
-- convex quadratic program
-- equality-constrained QP
-
-### Advanced
-
-- parameter round-trip
-- solution pool
-- model counts
-- LP file writing
-
-### EVRP
-
-Each instance checks:
-
-1. JSON/schema validity
-2. depot/customer consistency
-3. capacity feasibility
-4. model construction
-5. Gurobi optimization
-6. optimal status
-7. existence of a solution
-8. non-negative objective
-
-The EVRP model is intentionally a CI-sized EVRP-style MILP, not a replacement for your full thesis formulation. It is designed to catch regressions in model construction and solver connectivity.
-
-## Extending this for the thesis
-
-The next research layer should add a separate benchmark workflow rather than making the CI smoke suite responsible for long experiments:
-
-```text
-CI regression
-    └── fast deterministic tests
-
-Research benchmark
-    ├── TS1 ... TS6
-    ├── Gurobi/NIP/BPC/ALNS/LLP
-    ├── runtime
-    ├── objective/profit
-    ├── MIP gap
-    ├── nodes
-    └── CSV + plots
-```
-
-That keeps pull requests fast while allowing longer reproducible experiments on demand.
+Keep expensive TS1-TS6 thesis experiments in a separate workflow. These CI instances are deliberately small and deterministic.

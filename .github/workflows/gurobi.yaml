@@ -9,119 +9,99 @@ on:
 permissions:
   contents: read
 
+# Prevent overlapping workflow runs from consuming WLS sessions.
+# WLS tokens can remain counted until their token lifespan expires.
+concurrency:
+  group: gurobi-wls-${{ github.repository }}
+  cancel-in-progress: false
+
 jobs:
-  static:
+  static-validation:
     name: Static validation
     runs-on: ubuntu-24.04
+
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-python@v6
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.13"
-          cache: pip
-      - run: python -m pip install PyYAML==6.0.3
-      - name: Validate files
+
+      - name: Install static dependencies
+        run: python -m pip install --disable-pip-version-check PyYAML==6.0.3
+
+      - name: Validate YAML and JSON files
         run: |
           python - <<'PY'
           from pathlib import Path
-          import json, yaml
-          for p in [Path("config/development.yaml"), Path("config/research.yaml")]:
-              yaml.safe_load(p.read_text())
-          names=["tiny_evrp.json"]+[f"TS{i}.json" for i in range(1,7)]
-          for n in names:
-              d=json.loads((Path("instances")/n).read_text())
-              assert d["depot"] in d["nodes"]
-              assert all(c in d["nodes"] for c in d["customers"])
-          print("Static validation OK")
+          import json
+          import yaml
+
+          for path in Path("config").glob("*.yaml"):
+              yaml.safe_load(path.read_text())
+
+          required = [
+              Path("instances/tiny_evrp.json"),
+              *[Path(f"instances/TS{i}.json") for i in range(1, 7)],
+          ]
+
+          for path in required:
+              data = json.loads(path.read_text())
+              assert data["depot"] in data["nodes"], path
+              assert data["customers"], path
+              assert all(c in data["nodes"] for c in data["customers"]), path
+
+          print("Static validation passed.")
           PY
 
-  solver:
-    name: ${{ matrix.name }}
-    needs: static
-    runs-on: ubuntu-24.04
-    strategy:
-      fail-fast: false
-      max-parallel: 1
-      matrix:
-        include:
-          - name: Smoke
-            path: tests/test_gurobi.py
-          - name: LP
-            path: tests/test_lp.py
-          - name: MIP
-            path: tests/test_mip.py
-          - name: QP
-            path: tests/test_qp.py
-          - name: Advanced
-            path: tests/test_advanced.py
-    env:
-      GRB_WLSACCESSID: ${{ secrets.GRB_WLSACCESSID }}
-      GRB_WLSSECRET: ${{ secrets.GRB_WLSSECRET }}
-      GRB_LICENSEID: ${{ secrets.GRB_LICENSEID }}
-    steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.13"
-          cache: pip
-      - name: Install dependencies
-        run: python -m pip install -r requirements.txt
-      - name: Validate WLS secrets
-        shell: bash
-        run: |
-          set -e
-          test -n "$GRB_WLSACCESSID"
-          test -n "$GRB_WLSSECRET"
-          [[ "$GRB_LICENSEID" =~ ^[0-9]+$ ]]
-      - name: Run pytest
-        run: |
-          mkdir -p reports
-          python -m pytest "${{ matrix.path }}" -v --junitxml=reports/results.xml
-      - name: Upload JUnit
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: junit-${{ matrix.name }}
-          path: reports/results.xml
-          if-no-files-found: ignore
+  gurobi-tests:
+    name: Gurobi test matrix
+    needs: static-validation
+    # Fork PRs do not receive repository secrets. They still get static validation.
+    if: >
+      github.event_name != 'pull_request' ||
+      github.event.pull_request.head.repo.full_name == github.repository
 
-  evrp:
-    name: EVRP / ${{ matrix.instance }}
-    needs: static
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
+
     strategy:
       fail-fast: false
-      max-parallel: 1
-      matrix:
-        instance: [tiny_evrp.json, TS1.json, TS2.json, TS3.json, TS4.json, TS5.json, TS6.json]
+
     env:
       GRB_WLSACCESSID: ${{ secrets.GRB_WLSACCESSID }}
       GRB_WLSSECRET: ${{ secrets.GRB_WLSSECRET }}
       GRB_LICENSEID: ${{ secrets.GRB_LICENSEID }}
-      EVRP_INSTANCE: ${{ matrix.instance }}
+
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-python@v6
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.13"
           cache: pip
+
       - name: Install dependencies
-        run: python -m pip install -r requirements.txt
+        run: python -m pip install --disable-pip-version-check -r requirements.txt
+
       - name: Validate WLS secrets
         shell: bash
         run: |
-          set -e
-          test -n "$GRB_WLSACCESSID"
-          test -n "$GRB_WLSSECRET"
-          [[ "$GRB_LICENSEID" =~ ^[0-9]+$ ]]
-      - name: Run EVRP tests
+          set -euo pipefail
+          test -n "${GRB_WLSACCESSID}"
+          test -n "${GRB_WLSSECRET}"
+          [[ "${GRB_LICENSEID}" =~ ^[0-9]+$ ]]
+          echo "WLS credentials are configured."
+
+      - name: Run complete test matrix
         run: |
           mkdir -p reports
-          python -m pytest tests/test_evrp.py -v --junitxml=reports/results.xml
-      - name: Upload JUnit
+          python -m pytest -v --junitxml=reports/junit.xml
+
+      - name: Upload JUnit report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
-          name: junit-evrp-${{ matrix.instance }}
-          path: reports/results.xml
-          if-no-files-found: ignore
+          name: gurobi-junit-report
+          path: reports/junit.xml
+          if-no-files-found: error

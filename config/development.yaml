@@ -1,5 +1,18 @@
+environment: development
+
 gurobi:
   version: "13.0.3"
-  output_flag: false
+  output_flag: 0
+  time_limit_seconds: 30
+  mip_gap: 0.0
+  threads: 1
+
 tests:
-  suites: [smoke, lp, mip, qp, advanced]
+  evrp_instances:
+    - tiny_evrp.json
+    - TS1.json
+    - TS2.json
+    - TS3.json
+    - TS4.json
+    - TS5.json
+    - TS6.json
